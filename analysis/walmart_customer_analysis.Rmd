@@ -1,0 +1,255 @@
+---
+title: "Data Visualization Lab Assignment - 1"
+author: "Fatima Sohail"
+date: "2026-01-31"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+
+
+# Descriptive & Predictive Analysis
+
+## Dataset Description
+
+This dataset contains information about customers’ shopping habits at Walmart. It shows what products people buy, how much they spend, and some basic details about the customers, such as their age and gender. The data can help us understand customers’ preferences and shopping patterns.
+
+It includes details like:
+
+**Customer information:** IDs and demographics like age and gender.
+
+**Purchase information:** Products bought, purchase amounts, and transaction records.
+
+**Purpose:** The dataset can be used to analyze customer behavior, group similar customers, predict shopping trends, and visualize sales patterns.
+
+The dataset has a large number of records, giving a clear view of Walmart’s customer buying behavior. It is suitable for tasks like descriptive analysis, trend analysis, and predictive modeling.
+
+
+## 1. Understanding the Dataset
+```{r}
+# Load required libraries
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+
+
+# Load dataset
+walmart <- read.csv("Walmart_customer_purchases.csv")
+
+
+# View structure and first few rows
+str(walmart)
+head(walmart)
+summary(walmart)
+```
+
+**Explanation:**
+This code loads the dataset and displays its structure, first few records, and summary statistics. It helps understand each column, data types, and ranges of values.
+
+**Observations:**
+The dataset contains customer demographics such as age, gender, and city category, along with product categories and purchase amount. Some columns may have missing values, which are checked next.
+
+```{r}
+# Check missing values
+colSums(is.na(walmart))
+```
+
+**Explanation:**
+This code checks for missing values in each column.
+
+**Insight:**
+The columns have no missing values, making the dataset suitable for analysis without heavy preprocessing.
+
+## 2. Exploring Customer Demographics
+
+### Age Distribution
+```{r}
+ggplot(walmart, aes(x = Age)) +
+geom_bar(fill = "steelblue") +
+labs(title = "Age Distribution of Customers",
+x = "Age Group",
+y = "Number of Customers")
+```
+
+**Explanation:**
+This bar chart shows how customers are distributed across different age groups.
+
+**Insight:**
+Middle-aged customers (26–45) appear to be the most active shoppers.
+
+### Gender Distribution
+```{r}
+ggplot(walmart, aes(x = Gender, fill = Gender)) +
+geom_bar() +
+labs(title = "Gender Distribution of Customers",
+x = "Gender",
+y = "Count")
+```
+
+**Explanation:**
+This visualization compares the number of male and female customers.
+
+**Insight:**
+Male customers slightly dominate the purchasing activity in this dataset
+
+### City-wise Activity
+```{r}
+# Convert City to factor
+walmart$City <- as.factor(walmart$City)
+
+# Barplot
+ggplot(walmart, aes(x = City, fill = City)) +
+  geom_bar() +
+  labs(title = "Customer Distribution by City",
+       x = "Cities",
+       y = "Number of Customers") +
+  theme_minimal() +
+  theme(legend.position = "none")  # remove legend for faster rendering
+
+```
+**Explanation:**
+This visualization compares customer activity across different cities.
+
+**Insight:**
+City category B has the highest customer participation.
+
+## 3. Sales and Product Category Analysis
+
+#### Total Sales by Product Category
+```{r}
+# Total Sales by Product (Fixed)
+sales_category <- walmart %>%
+  group_by(Product_Name) %>%                     # Use actual product column
+  summarise(Total_Sales = sum(Purchase_Amount, na.rm = TRUE))  # Use actual purchase column
+
+# Plotting
+ggplot(sales_category,
+       aes(x = reorder(Product_Name, -Total_Sales),   # x-axis = Product
+           y = Total_Sales)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
+  labs(title = "Total Sales by Product",
+       x = "Product ID",
+       y = "Total Sales")
+
+```
+
+**Explanation:**
+This code calculates total sales for each product category and visualizes them.
+
+**Insight:**
+Some product categories perform significantly better than others.
+
+## 4. Time-Based Trends
+
+#### Sales Over Time
+```{r}
+# Convert purchase date to Date format
+walmart$Purchase_Date <- as.Date(walmart$Purchase_Date)
+
+daily_sales <- walmart %>%
+  group_by(Purchase_Date) %>%
+  summarise(Total_Sales = sum(Purchase_Amount))
+
+ggplot(daily_sales, aes(x = Purchase_Date, y = Total_Sales)) +
+  geom_line(color = "blue") +
+  labs(title = "Daily Sales Trend",
+       x = "Date",
+       y = "Total Sales")
+
+```
+
+**Explanation:**
+This code analyzes how sales change over time using the purchase date.
+
+**Insight:**
+Sales fluctuate across dates, indicating peak and low shopping periods.
+
+#### Peak Shopping Days
+```{r}
+walmart$Day <- weekdays(walmart$Purchase_Date)
+
+ggplot(walmart, aes(x = Day)) +
+  geom_bar(fill = "purple") +
+  labs(title = "Purchases by Day of the Week",
+       x = "Day",
+       y = "Number of Purchases")
+
+```
+
+**Insight:**
+Certain days show higher purchase activity, indicating peak shopping days.
+
+## 5. Advanced Insights
+
+#### Purchase Amount by Age Group
+```{r}
+ggplot(walmart, aes(x = Age, y = Purchase_Amount)) +
+  geom_boxplot(fill = "orange") +
+  labs(title = "Purchase Amount by Age Group",
+       x = "Age Group",
+       y = "Purchase Amount")
+
+```
+
+**Insight:**
+Middle-aged customers tend to have higher median purchase values.
+
+#### Purchase Behavior by Gender
+```{r}
+ggplot(walmart, aes(x = Gender, y = Purchase_Amount, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Purchase Amount by Gender",
+       x = "Gender",
+       y = "Purchase Amount")
+
+```
+
+**Insight:**
+Male customers show slightly higher spending patterns.
+
+#### Product Preference by City
+```{r}
+# Boxplot
+ggplot(walmart, aes(x = City, y = Purchase_Amount, fill = City)) +
+  geom_boxplot() +
+  coord_flip() +  # horizontal to improve readability
+  labs(title = "Purchase Amount by City",
+       x = "City",
+       y = "Purchase Amount") +
+  theme_minimal() +
+  theme(legend.position = "none")  # optional: hide legend
+
+
+```
+
+**Insight:**
+Customers from certain cities spend more per purchase.
+
+## 6. Insights and Recommendations
+#### Key Findings
+
+Customers aged 26–45 are the most active buyers.
+
+Certain product categories generate the highest sales.
+
+Sales vary over time with identifiable peak days.
+
+Male customers have slightly higher purchase amounts.
+
+#### Recommendations
+
+Target marketing campaigns toward high-performing age groups.
+
+Focus promotions on top-selling product categories.
+
+Increase inventory and offers during peak shopping days.
+
+Customize city-based promotions for high-spending locations.
+
+## 7. Conclusion
+
+This analysis highlights how customer demographics, product categories, and time-based trends influence purchasing behavior. The insights gained from visualizations can help improve sales strategies and business decision-making.
